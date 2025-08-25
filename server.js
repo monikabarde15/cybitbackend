@@ -20,23 +20,18 @@ mongoose.connect('mongodb+srv://demoadmin:sw8M6RwtzL3v_VN@cluster0.ocsokf8.mongo
 app.use('/api/contact', contactRoutes);
 
 app.post("/api/auth/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
+  const admin = await Admin.findOne({});
+  if (!admin) return res.status(400).json({ message: "Admin not registered yet" });
 
-    const admin = await Admin.findOne({});
-    if (!admin) return res.status(400).json({ message: "Admin not registered yet" });
+  if (email !== admin.email) return res.status(401).json({ message: "Invalid credentials" });
 
-    if (email !== admin.email) return res.status(401).json({ message: "Invalid credentials" });
+  const isMatch = await bcrypt.compare(password, admin.password);
+  if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
-
-    res.json({ token: "dummy_admin_token", message: "Login success" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
+  res.json({ token: "dummy_admin_token", message: "Login success" });
 });
+
 
 
 app.listen(PORT, () => {
