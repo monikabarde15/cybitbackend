@@ -18,6 +18,9 @@ mongoose.connect(
   .catch(err => console.error("❌ MongoDB connection error:", err));
 
 // Routes
+app.use("/api/contact", contactRoutes);
+
+// Admin Register
 app.post("/api/auth/register", async (req, res) => {
   const { email, password } = req.body;
   const existingAdmin = await Admin.findOne({});
