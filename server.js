@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import cors from "cors";
 import Admin from "./models/Admin.js"; // <- import Admin model
+import contactRoutes from "./routes/contactRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
