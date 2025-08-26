@@ -99,4 +99,16 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// routes/blogRoutes.js
+router.get("/:id", async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) return res.status(404).json({ success: false, message: "Blog not found" });
+    res.json({ success: true, data: blog });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server Error", error: err.message });
+  }
+});
+
+
 export default router;
