@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import cors from "cors";
 import Admin from "./models/Admin.js"; // <- import Admin model
 import contactRoutes from "./routes/contactRoutes.js"; // <- add .js extension
+const blogRoutes = require("./routes/blogRoutes");
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +22,9 @@ mongoose.connect(
 
 // Routes
 app.use("/api/contact", contactRoutes);
+//Blogs
+app.use("/api/blogs", blogRoutes);
+
 
 // Admin Register
 app.post("/api/auth/register", async (req, res) => {
