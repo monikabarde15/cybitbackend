@@ -15,23 +15,18 @@ if (!fs.existsSync(uploadDir)) {
 
 // ✅ Multer Storage Config
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
 
 const upload = multer({ storage });
 
-// ✅ Create Blog
+// ✅ Create Blog (image optional)
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { title, description } = req.body;
-    if (!title || !description) {
+    if (!title || !description)
       return res.status(400).json({ success: false, message: "Title and Description are required" });
-    }
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -56,23 +51,23 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ Update Blog
+// ✅ Update Blog (image optional)
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     const { title, description } = req.body;
     const blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(404).json({ success: false, message: "Blog not found" });
 
-    // Delete old image if a new one is uploaded
+    // Delete old image only if a new one is uploaded
     if (req.file && blog.image) {
-      const oldImagePath = path.join("uploads", path.basename(blog.image));
+      const oldImagePath = path.join(uploadDir, path.basename(blog.image));
       if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
     }
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : blog.image;
 
-    blog.title = title;
-    blog.description = description;
+    blog.title = title || blog.title;
+    blog.description = description || blog.description;
     blog.image = imageUrl;
 
     await blog.save();
@@ -90,9 +85,9 @@ router.delete("/:id", async (req, res) => {
     const blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(404).json({ success: false, message: "Blog not found" });
 
-    // Delete image file
+    // Delete image if exists
     if (blog.image) {
-      const imagePath = path.join("uploads", path.basename(blog.image));
+      const imagePath = path.join(uploadDir, path.basename(blog.image));
       if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
     }
 
