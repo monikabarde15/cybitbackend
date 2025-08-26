@@ -2,10 +2,10 @@ import express from "express";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import cors from "cors";
-import Admin from "./models/Admin.js"; // <- import Admin model
-import contactRoutes from "./routes/contactRoutes.js"; // <- add .js extension
-const blogRoutes = require("./routes/blogRoutes");
 
+import Admin from "./models/Admin.js"; 
+import contactRoutes from "./routes/contactRoutes.js"; 
+import blogRoutes from "./routes/blogRoutes.js"; // ✅ fixed
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,32 +22,43 @@ mongoose.connect(
 
 // Routes
 app.use("/api/contact", contactRoutes);
-//Blogs
 app.use("/api/blogs", blogRoutes);
-
 
 // Admin Register
 app.post("/api/auth/register", async (req, res) => {
-  const { email, password } = req.body;
-  const existingAdmin = await Admin.findOne({});
-  if (existingAdmin) return res.status(403).json({ message: "Admin already registered" });
+  try {
+    const { email, password } = req.body;
+    const existingAdmin = await Admin.findOne({});
+    if (existingAdmin) {
+      return res.status(403).json({ message: "Admin already registered" });
+    }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const admin = new Admin({ email, password: hashedPassword });
-  await admin.save();
-  res.json({ message: "Admin registered successfully" });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const admin = new Admin({ email, password: hashedPassword });
+    await admin.save();
+
+    res.json({ message: "Admin registered successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error registering admin", error: error.message });
+  }
 });
 
+// Admin Login
 app.post("/api/auth/login", async (req, res) => {
-  const { email, password } = req.body;
-  const admin = await Admin.findOne({});
-  if (!admin) return res.status(400).json({ message: "Admin not registered yet" });
+  try {
+    const { email, password } = req.body;
+    const admin = await Admin.findOne({});
+    if (!admin) return res.status(400).json({ message: "Admin not registered yet" });
 
-  if (email !== admin.email) return res.status(401).json({ message: "Invalid credentials" });
-  const isMatch = await bcrypt.compare(password, admin.password);
-  if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+    if (email !== admin.email) return res.status(401).json({ message: "Invalid credentials" });
 
-  res.json({ token: "dummy_admin_token", message: "Login success" });
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+    res.json({ token: "dummy_admin_token", message: "Login success" });
+  } catch (error) {
+    res.status(500).json({ message: "Error logging in", error: error.message });
+  }
 });
 
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
