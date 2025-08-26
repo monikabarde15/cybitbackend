@@ -31,10 +31,25 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads")); // serve uploaded images
 
-// 6️⃣ MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ MongoDB connection error:", err));
+// 6️⃣ MongoDB Connection (robust)
+async function connectDB() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, { 
+      useNewUrlParser: true, 
+      useUnifiedTopology: true,
+      bufferTimeoutMS: 30000, // wait 30 seconds before timing out
+    });
+    console.log("✅ MongoDB connected");
+
+    // Start server only after DB connection
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err);
+    process.exit(1); // stop the app if DB connection fails
+  }
+}
+
+connectDB();
 
 // 7️⃣ Routes
 app.use("/api/contact", contactRoutes);
@@ -78,6 +93,3 @@ app.post("/api/auth/login", async (req, res) => {
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
 });
-
-// 🔟 Start Server
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
