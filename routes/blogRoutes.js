@@ -1,17 +1,25 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import Blog from "../models/Blog.js";
 
 const router = express.Router();
 
-// ✅ Storage Config
+// ✅ Ensure uploads folder exists
+const uploadDir = "uploads";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+  console.log("✅ uploads/ folder created");
+}
+
+// ✅ Multer Storage Config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // uploads folder
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // unique name
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
@@ -21,7 +29,6 @@ const upload = multer({ storage });
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { title, description } = req.body;
-
     if (!title || !description) {
       return res.status(400).json({ success: false, message: "Title and Description are required" });
     }
@@ -53,17 +60,24 @@ router.get("/", async (req, res) => {
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     const { title, description } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.image;
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) return res.status(404).json({ success: false, message: "Blog not found" });
 
-    const updatedBlog = await Blog.findByIdAndUpdate(
-      req.params.id,
-      { title, description, image: imageUrl },
-      { new: true }
-    );
+    // Delete old image if a new one is uploaded
+    if (req.file && blog.image) {
+      const oldImagePath = path.join("uploads", path.basename(blog.image));
+      if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+    }
 
-    if (!updatedBlog) return res.status(404).json({ success: false, message: "Blog not found" });
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : blog.image;
 
-    res.json({ success: true, message: "Blog updated", data: updatedBlog });
+    blog.title = title;
+    blog.description = description;
+    blog.image = imageUrl;
+
+    await blog.save();
+
+    res.json({ success: true, message: "Blog updated", data: blog });
   } catch (error) {
     console.error("❌ Error updating blog:", error);
     res.status(500).json({ success: false, message: "Server Error", error: error.message });
@@ -73,9 +87,16 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 // ✅ Delete Blog
 router.delete("/:id", async (req, res) => {
   try {
-    const deletedBlog = await Blog.findByIdAndDelete(req.params.id);
-    if (!deletedBlog) return res.status(404).json({ success: false, message: "Blog not found" });
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) return res.status(404).json({ success: false, message: "Blog not found" });
 
+    // Delete image file
+    if (blog.image) {
+      const imagePath = path.join("uploads", path.basename(blog.image));
+      if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+    }
+
+    await Blog.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Blog deleted" });
   } catch (error) {
     console.error("❌ Error deleting blog:", error);

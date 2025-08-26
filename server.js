@@ -8,31 +8,39 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import cors from "cors";
 import jwt from "jsonwebtoken";
+import fs from "fs";
 
 import Admin from "./models/Admin.js"; 
 import contactRoutes from "./routes/contactRoutes.js"; 
 import blogRoutes from "./routes/blogRoutes.js";
 
-// 3️⃣ Constants
+// 3️⃣ Ensure uploads folder exists
+const uploadDir = "uploads";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+  console.log("✅ uploads/ folder created");
+}
+
+// 4️⃣ Constants
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// 4️⃣ Middleware
+// 5️⃣ Middleware
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads")); // serve uploaded images
 
-// 5️⃣ MongoDB Connection
+// 6️⃣ MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.error("❌ MongoDB connection error:", err));
 
-// 6️⃣ Routes
+// 7️⃣ Routes
 app.use("/api/contact", contactRoutes);
 app.use("/api/blogs", blogRoutes);
 
-// 7️⃣ Admin Register
+// 8️⃣ Admin Register
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -52,7 +60,7 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
-// 8️⃣ Admin Login
+// 9️⃣ Admin Login
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -71,5 +79,5 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// 9️⃣ Start Server
+// 🔟 Start Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
