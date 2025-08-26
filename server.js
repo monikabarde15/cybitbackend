@@ -34,7 +34,7 @@ app.use("/uploads", express.static("uploads")); // serve uploaded images
 // 6️⃣ MongoDB Connection (robust)
 async function connectDB() {
   try {
-    await mongoose.connect(process.env.MONGO_URI, { 
+    await mongoose.connect("mongodb+srv://demoadmin:sw8M6RwtzL3v_VN@cluster0.ocsokf8.mongodb.net/testdb?retryWrites=true&w=majority", { 
       useNewUrlParser: true, 
       useUnifiedTopology: true,
       bufferTimeoutMS: 30000, // wait 30 seconds before timing out
