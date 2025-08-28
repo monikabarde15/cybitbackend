@@ -1,10 +1,10 @@
 import express from "express";
-import upload from "../middlewares/upload.js"; // multerS3 setup
+import upload from "../middlewares/upload.js"; // multer-s3 setup
 import Application from "../models/Application.js";
 
 const router = express.Router();
 
-// ✅ Create or submit a new job application
+// ✅ Submit a new job application
 router.post("/", upload.single("resume"), async (req, res) => {
   try {
     const {
@@ -18,13 +18,14 @@ router.post("/", upload.single("resume"), async (req, res) => {
       message,
     } = req.body;
 
-    // Required field validation
+    // Validate required fields
     if (!role || !fullName || !email || !phone || !workplaceType || !jobLocation || !employmentType) {
       return res.status(400).json({ success: false, message: "All required fields must be provided" });
     }
 
-    // S3 URL for uploaded resume
-    const resume = req.file?.location || "";
+    // S3 file URL
+    const resume = req.file?.location;
+    if (!resume) return res.status(400).json({ success: false, message: "Resume upload failed" });
 
     const application = new Application({
       role,
@@ -42,7 +43,7 @@ router.post("/", upload.single("resume"), async (req, res) => {
     res.status(201).json({ success: true, message: "Application submitted successfully!", application });
   } catch (error) {
     console.error("Error submitting application:", error);
-    res.status(500).json({ success: false, message: "Error submitting application.", error: error.message });
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 });
 
@@ -53,23 +54,28 @@ router.get("/", async (req, res) => {
     res.status(200).json({ success: true, applications });
   } catch (error) {
     console.error("Error fetching applications:", error);
-    res.status(500).json({ success: false, message: "Error fetching applications", error: error.message });
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 });
 
 // ✅ Update application status
 router.put("/:id", async (req, res) => {
   try {
-    const { status } = req.body; // e.g., "Shortlisted" or "Rejected"
+    const { status } = req.body;
     if (!status) return res.status(400).json({ success: false, message: "Status is required" });
 
-    const application = await Application.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const application = await Application.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+
     if (!application) return res.status(404).json({ success: false, message: "Application not found" });
 
     res.status(200).json({ success: true, message: "Status updated successfully", application });
   } catch (error) {
     console.error("Error updating status:", error);
-    res.status(500).json({ success: false, message: "Error updating status", error: error.message });
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 });
 
@@ -82,7 +88,7 @@ router.delete("/:id", async (req, res) => {
     res.status(200).json({ success: true, message: "Application deleted successfully" });
   } catch (error) {
     console.error("Error deleting application:", error);
-    res.status(500).json({ success: false, message: "Error deleting application", error: error.message });
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 });
 
