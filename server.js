@@ -19,6 +19,7 @@ import fs from "fs";
 import Admin from "./models/Admin.js"; 
 import contactRoutes from "./routes/contactRoutes.js"; 
 import blogRoutes from "./routes/blogRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
 
 // 4️⃣ Ensure uploads folder exists
 const uploadDir = path.join(__dirname, "uploads");
@@ -60,6 +61,9 @@ connectDB();
 
 // 9️⃣ Routes
 app.use("/api/contact", contactRoutes);
+//Job Apply
+app.use("/api/apply", jobRoutes);
+//blogs
 app.use("/api/blogs", blogRoutes);
 
 // 1️⃣0️⃣ Admin Register
