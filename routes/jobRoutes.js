@@ -34,5 +34,39 @@ router.post("/", upload.single("resume"), async (req, res) => {
     res.status(500).json({ success: false, message: "Error submitting application.", error: error.message });
   }
 });
+// Get all applications
+router.get("/", async (req, res) => {
+  try {
+    const applications = await Application.find().sort({ createdAt: -1 });
+    res.json({ success: true, applications });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching applications", error: error.message });
+  }
+});
+
+// Update status
+router.put("/:id", async (req, res) => {
+  try {
+    const { status } = req.body; // "Shortlisted" or "Rejected"
+    const application = await Application.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    res.json({ success: true, application });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error updating status", error: error.message });
+  }
+});
+
+// Delete application
+router.delete("/:id", async (req, res) => {
+  try {
+    await Application.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Application deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error deleting application", error: error.message });
+  }
+});
 
 export default router;

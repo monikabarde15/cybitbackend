@@ -5,11 +5,24 @@ const applicationSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String, required: true },
-  workplaceType: { type: String, required: true, enum: ['Remote', 'Hybrid', 'Onsite'] },
+  workplaceType: { 
+    type: String, 
+    required: true, 
+    enum: ['Remote', 'Hybrid', 'Onsite'] 
+  },
   jobLocation: { type: String, required: true },
-  employmentType: { type: String, required: true, enum: ['Full-Time', 'Part-Time', 'Internship'] },
+  employmentType: { 
+    type: String, 
+    required: true, 
+    enum: ['Full-Time', 'Part-Time', 'Internship'] 
+  },
   resume: { type: String, required: true },
   message: { type: String, default: '' },
+  status: { 
+    type: String, 
+    enum: ["Pending", "Shortlisted", "Rejected"], 
+    default: "Pending" 
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
