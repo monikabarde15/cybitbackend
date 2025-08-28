@@ -2,7 +2,6 @@ import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
-
 dotenv.config();
 
 const s3 = new S3Client({
@@ -16,7 +15,7 @@ const s3 = new S3Client({
 const upload = multer({
   storage: multerS3({
     s3: s3,
-    bucket: process.env.S3_BUCKET_NAME, // ✅ Must be defined
+    bucket: process.env.S3_BUCKET_NAME,
     acl: "private",
     key: function (req, file, cb) {
       cb(null, `resumes/${Date.now()}-${file.originalname}`);
