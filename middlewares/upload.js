@@ -16,15 +16,12 @@ const s3 = new S3Client({
 const upload = multer({
   storage: multerS3({
     s3: s3,
-    bucket: process.env.S3_BUCKET_NAME, // ✅ bucket defined
-    acl: "public-read",
-    key: (req, file, cb) => {
-      const uniqueName = `${Date.now()}_${file.originalname}`;
-      cb(null, uniqueName);
+    bucket: process.env.S3_BUCKET_NAME, // ✅ Must be defined
+    acl: "private",
+    key: function (req, file, cb) {
+      cb(null, `resumes/${Date.now()}-${file.originalname}`);
     },
-    contentType: multerS3.AUTO_CONTENT_TYPE, // handle PDF/images automatically
   }),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
 });
 
 export default upload;
