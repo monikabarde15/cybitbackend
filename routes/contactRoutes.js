@@ -56,6 +56,7 @@ router.delete("/:id", async (req, res) => {
 // ============================
 // 4. Reply to Contact (Send Email)
 // ============================
+// Reply to Contact (Send Email)
 router.post("/reply/:id", async (req, res) => {
   try {
     const { replyMessage } = req.body;
@@ -65,16 +66,18 @@ router.post("/reply/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "Contact not found" });
     }
 
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "OK" : "MISSING");
+
     // Setup Nodemailer
     const transporter = nodemailer.createTransport({
-      service: "gmail", // या smtp config डाल सकते हो
+      service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER,  // .env में email
-        pass: process.env.EMAIL_PASS,  // .env में password/app password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-    // Mail Options
     const mailOptions = {
       from: `"Admin" <${process.env.EMAIL_USER}>`,
       to: contact.email,
@@ -90,5 +93,6 @@ router.post("/reply/:id", async (req, res) => {
     res.status(500).json({ success: false, message: "Error sending reply", error: error.message });
   }
 });
+
 
 export default router;
