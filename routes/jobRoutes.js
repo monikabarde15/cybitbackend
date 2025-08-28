@@ -7,6 +7,9 @@ const router = express.Router();
 // ✅ Submit a new job application
 router.post("/", upload.single("resume"), async (req, res) => {
   try {
+    console.log("REQ BODY:", req.body);
+    console.log("REQ FILE:", req.file);
+
     const {
       role,
       fullName,
@@ -20,12 +23,16 @@ router.post("/", upload.single("resume"), async (req, res) => {
 
     // Validate required fields
     if (!role || !fullName || !email || !phone || !workplaceType || !jobLocation || !employmentType) {
+      console.log("Validation failed");
       return res.status(400).json({ success: false, message: "All required fields must be provided" });
     }
 
     // S3 file URL
     const resume = req.file?.location;
-    if (!resume) return res.status(400).json({ success: false, message: "Resume upload failed" });
+    if (!resume) {
+      console.log("Resume upload failed", req.file);
+      return res.status(400).json({ success: false, message: "Resume upload failed" });
+    }
 
     const application = new Application({
       role,
@@ -39,13 +46,17 @@ router.post("/", upload.single("resume"), async (req, res) => {
       message: message || "",
     });
 
+    console.log("Saving application to DB...");
     await application.save();
+    console.log("Saved successfully");
+
     res.status(201).json({ success: true, message: "Application submitted successfully!", application });
   } catch (error) {
     console.error("Error submitting application:", error);
     res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 });
+
 
 // ✅ Get all job applications (latest first)
 router.get("/", async (req, res) => {
