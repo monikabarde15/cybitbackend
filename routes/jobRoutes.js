@@ -1,10 +1,10 @@
 import express from "express";
-import upload, { uploadToCloudinary } from "../middlewares/uploadCloudinary.js";
+import upload from "../middlewares/upload.js";
 import Application from "../models/Application.js";
 
 const router = express.Router();
 
-// Submit Job Application with Cloudinary upload
+// ✅ Submit Job Application (Local file storage)
 router.post("/", upload.single("resume"), async (req, res) => {
   try {
     const {
@@ -19,16 +19,29 @@ router.post("/", upload.single("resume"), async (req, res) => {
     } = req.body;
 
     // Validation
-    if (!role || !fullName || !email || !phone || !workplaceType || !jobLocation || !employmentType) {
-      return res.status(400).json({ success: false, message: "All required fields must be provided" });
+    if (
+      !role ||
+      !fullName ||
+      !email ||
+      !phone ||
+      !workplaceType ||
+      !jobLocation ||
+      !employmentType
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All required fields must be provided",
+      });
     }
 
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "Resume file is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Resume file is required" });
     }
 
-    // Upload resume to Cloudinary
-    const resumeUrl = await uploadToCloudinary(req.file.path);
+    // ✅ Local File Path (direct uploads/ me save hoga)
+    const resumePath = `/uploads/${req.file.filename}`;
 
     const application = new Application({
       role,
@@ -38,26 +51,37 @@ router.post("/", upload.single("resume"), async (req, res) => {
       workplaceType,
       jobLocation,
       employmentType,
-      resume: resumeUrl,
+      resume: resumePath, // stored local path
       message: message || "",
     });
 
     await application.save();
-    res.status(201).json({ success: true, message: "Application submitted successfully!", application });
+    res.status(201).json({
+      success: true,
+      message: "Application submitted successfully!",
+      application,
+    });
   } catch (error) {
     console.error("Error submitting application:", error);
-    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 });
 
-// ✅ Get all job applications
+// ✅ Get all applications
 router.get("/", async (req, res) => {
   try {
     const applications = await Application.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, applications });
   } catch (error) {
-    console.error("Error fetching applications:", error);
-    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 });
 
@@ -65,7 +89,10 @@ router.get("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { status } = req.body;
-    if (!status) return res.status(400).json({ success: false, message: "Status is required" });
+    if (!status)
+      return res
+        .status(400)
+        .json({ success: false, message: "Status is required" });
 
     const application = await Application.findByIdAndUpdate(
       req.params.id,
@@ -73,25 +100,41 @@ router.put("/:id", async (req, res) => {
       { new: true }
     );
 
-    if (!application) return res.status(404).json({ success: false, message: "Application not found" });
+    if (!application)
+      return res
+        .status(404)
+        .json({ success: false, message: "Application not found" });
 
-    res.status(200).json({ success: true, message: "Status updated successfully", application });
+    res
+      .status(200)
+      .json({ success: true, message: "Status updated successfully", application });
   } catch (error) {
-    console.error("Error updating status:", error);
-    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 });
 
-// ✅ Delete a job application
+// ✅ Delete application
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Application.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ success: false, message: "Application not found" });
+    if (!deleted)
+      return res
+        .status(404)
+        .json({ success: false, message: "Application not found" });
 
-    res.status(200).json({ success: true, message: "Application deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Application deleted successfully" });
   } catch (error) {
-    console.error("Error deleting application:", error);
-    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 });
 
