@@ -2,18 +2,18 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// ✅ Ensure upload folder exists
-const uploadDir = "uploads/resumes";
+// ✅ Uploads folder ensure
+const uploadDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+  fs.mkdirSync(uploadDir);
 }
 
-// ✅ Multer Storage Config (Local Disk)
+// ✅ Multer disk storage (local uploads/)
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir); // store in uploads/resumes
+  destination: (req, file, cb) => {
+    cb(null, uploadDir); // uploads/ folder me save hoga
   },
-  filename: function (req, file, cb) {
+  filename: (req, file, cb) => {
     const uniqueName =
       Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname);
     cb(null, uniqueName);
