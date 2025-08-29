@@ -45,14 +45,20 @@ app.use("/uploads", express.static(uploadDir));
 // 8️⃣ MongoDB Connection
 async function connectDB() {
   try {
-    await mongoose.connect(process.env.MONGO_URI || "mongodb+srv://demoadmin:sw8M6RwtzL3v_VN@cluster0.ocsokf8.mongodb.net/testdb?retryWrites=true&w=majority", {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(
+      process.env.MONGO_URI ||
+        "mongodb+srv://demoadmin:sw8M6RwtzL3v_VN@cluster0.ocsokf8.mongodb.net/testdb?retryWrites=true&w=majority",
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      }
+    );
     console.log("✅ MongoDB connected");
 
     // Start server only after DB connection
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on http://localhost:${PORT}`)
+    );
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
@@ -81,7 +87,9 @@ app.post("/api/auth/register", async (req, res) => {
 
     res.json({ message: "Admin registered successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error registering admin", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error registering admin", error: error.message });
   }
 });
 
@@ -91,10 +99,12 @@ app.post("/api/auth/login", async (req, res) => {
     const { email, password } = req.body;
 
     const admin = await Admin.findOne({ email });
-    if (!admin) return res.status(400).json({ message: "Admin not registered yet" });
+    if (!admin)
+      return res.status(400).json({ message: "Admin not registered yet" });
 
     const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+    if (!isMatch)
+      return res.status(401).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
       { id: admin._id, email: admin.email },
@@ -104,6 +114,8 @@ app.post("/api/auth/login", async (req, res) => {
 
     res.json({ token, message: "Login success" });
   } catch (error) {
-    res.status(500).json({ message: "Error logging in", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error logging in", error: error.message });
   }
 });
