@@ -1,14 +1,12 @@
 import express from "express";
-import upload from "../middlewares/upload.js"; // multer-s3 setup
+import upload, { uploadToCloudinary } from "../middlewares/uploadCloudinary.js";
 import Application from "../models/Application.js";
 
 const router = express.Router();
 
+// Submit Job Application with Cloudinary upload
 router.post("/", upload.single("resume"), async (req, res) => {
   try {
-    console.log("REQ BODY:", req.body);
-    console.log("REQ FILE:", req.file);
-
     const {
       role,
       fullName,
@@ -20,20 +18,17 @@ router.post("/", upload.single("resume"), async (req, res) => {
       message,
     } = req.body;
 
-    // Validate required fields
+    // Validation
     if (!role || !fullName || !email || !phone || !workplaceType || !jobLocation || !employmentType) {
-      console.log("Validation failed");
       return res.status(400).json({ success: false, message: "All required fields must be provided" });
     }
 
-    // Check if file uploaded
-    const resume = req.file?.location;
-    if (!resume) {
-      console.log("Resume upload failed:", req.file);
-      return res.status(400).json({ success: false, message: "Resume upload failed" });
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Resume file is required" });
     }
 
-    console.log("S3 URL:", resume);
+    // Upload resume to Cloudinary
+    const resumeUrl = await uploadToCloudinary(req.file.path);
 
     const application = new Application({
       role,
@@ -43,29 +38,19 @@ router.post("/", upload.single("resume"), async (req, res) => {
       workplaceType,
       jobLocation,
       employmentType,
-      resume,
+      resume: resumeUrl,
       message: message || "",
     });
 
-    console.log("Saving application to DB...");
     await application.save();
-    console.log("Saved successfully");
-
     res.status(201).json({ success: true, message: "Application submitted successfully!", application });
   } catch (error) {
-    console.error("Full error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message,
-      stack: error.stack, // send full stack for debugging (dev only)
-    });
+    console.error("Error submitting application:", error);
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 });
 
-
-
-// ✅ Get all job applications (latest first)
+// ✅ Get all job applications
 router.get("/", async (req, res) => {
   try {
     const applications = await Application.find().sort({ createdAt: -1 });
