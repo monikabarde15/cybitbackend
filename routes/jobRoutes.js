@@ -1,10 +1,29 @@
 import express from "express";
-import upload from "../middlewares/upload.js";
+import mongoose from "mongoose";
+import multer from "multer";
+import { GridFsStorage } from "multer-gridfs-storage";
 import Application from "../models/Application.js";
 
 const router = express.Router();
 
-// ✅ Submit Job Application (Local file storage)
+// ✅ MongoDB Connection String (apna MongoDB URI daalo)
+const mongoURI = "mongodb://127.0.0.1:27017/visionlex"; 
+// Agar Mongo Atlas use karte ho to yaha URI paste karo
+
+// ✅ GridFS Storage Setup
+const storage = new GridFsStorage({
+  url: mongoURI,
+  file: (req, file) => {
+    return {
+      bucketName: "resumes", // ✅ GridFS bucket name
+      filename: Date.now() + "-" + file.originalname,
+    };
+  },
+});
+
+const upload = multer({ storage });
+
+// ✅ Submit Job Application (store file in GridFS)
 router.post("/", upload.single("resume"), async (req, res) => {
   try {
     const {
@@ -18,7 +37,6 @@ router.post("/", upload.single("resume"), async (req, res) => {
       message,
     } = req.body;
 
-    // Validation
     if (
       !role ||
       !fullName ||
@@ -28,21 +46,18 @@ router.post("/", upload.single("resume"), async (req, res) => {
       !jobLocation ||
       !employmentType
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "All required fields must be provided",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "All required fields must be provided" });
     }
 
-    if (!req.file) {
+    if (!req.file || !req.file.id) {
       return res
         .status(400)
         .json({ success: false, message: "Resume file is required" });
     }
 
-    // ✅ Local File Path (direct uploads/ me save hoga)
-    const resumePath = `/uploads/${req.file.filename}`;
-
+    // ✅ GridFS file ID store kar rahe hai
     const application = new Application({
       role,
       fullName,
@@ -51,11 +66,12 @@ router.post("/", upload.single("resume"), async (req, res) => {
       workplaceType,
       jobLocation,
       employmentType,
-      resume: resumePath, // stored local path
+      resume: req.file.id, // GridFS file ID
       message: message || "",
     });
 
     await application.save();
+
     res.status(201).json({
       success: true,
       message: "Application submitted successfully!",
@@ -85,14 +101,36 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ✅ Download resume by ID
+router.get("/resume/:id", async (req, res) => {
+  try {
+    const conn = mongoose.connection;
+    const bucket = new mongoose.mongo.GridFSBucket(conn.db, {
+      bucketName: "resumes",
+    });
+
+    const _id = new mongoose.Types.ObjectId(req.params.id);
+    const downloadStream = bucket.openDownloadStream(_id);
+
+    downloadStream.on("error", () =>
+      res.status(404).json({ success: false, message: "File not found" })
+    );
+
+    downloadStream.pipe(res);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
 // ✅ Update application status
 router.put("/:id", async (req, res) => {
   try {
     const { status } = req.body;
-    if (!status)
+    if (!status) {
       return res
         .status(400)
         .json({ success: false, message: "Status is required" });
+    }
 
     const application = await Application.findByIdAndUpdate(
       req.params.id,
@@ -100,14 +138,17 @@ router.put("/:id", async (req, res) => {
       { new: true }
     );
 
-    if (!application)
+    if (!application) {
       return res
         .status(404)
         .json({ success: false, message: "Application not found" });
+    }
 
-    res
-      .status(200)
-      .json({ success: true, message: "Status updated successfully", application });
+    res.status(200).json({
+      success: true,
+      message: "Status updated successfully",
+      application,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -121,10 +162,11 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Application.findByIdAndDelete(req.params.id);
-    if (!deleted)
+    if (!deleted) {
       return res
         .status(404)
         .json({ success: false, message: "Application not found" });
+    }
 
     res
       .status(200)

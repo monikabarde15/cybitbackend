@@ -1,25 +1,16 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { GridFsStorage } from "multer-gridfs-storage";
 
-// ✅ Uploads folder ensure
-const uploadDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
-// ✅ Multer disk storage (local uploads/)
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir); // uploads/ folder me save hoga
-  },
-  filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname);
-    cb(null, uniqueName);
+const storage = new GridFsStorage({
+  url: process.env.MONGO_URI || "your_mongo_atlas_uri",
+  options: { useNewUrlParser: true, useUnifiedTopology: true },
+  file: (req, file) => {
+    return {
+      bucketName: "resumes", // collection name
+      filename: Date.now() + "-" + file.originalname, // unique filename
+    };
   },
 });
 
 const upload = multer({ storage });
-
 export default upload;
