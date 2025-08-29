@@ -16,8 +16,8 @@ import cors from "cors";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 
-import Admin from "./models/Admin.js"; 
-import contactRoutes from "./routes/contactRoutes.js"; 
+import Admin from "./models/Admin.js";
+import contactRoutes from "./routes/contactRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 
@@ -38,7 +38,9 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_here";
 // 7️⃣ Middleware
 app.use(cors());
 app.use(express.json());
-app.use("/uploads", express.static(uploadDir)); // serve uploaded images
+
+// ✅ Serve uploads folder statically (important for resumes/images)
+app.use("/uploads", express.static(uploadDir));
 
 // 8️⃣ MongoDB Connection
 async function connectDB() {
@@ -46,7 +48,6 @@ async function connectDB() {
     await mongoose.connect(process.env.MONGO_URI || "mongodb+srv://demoadmin:sw8M6RwtzL3v_VN@cluster0.ocsokf8.mongodb.net/testdb?retryWrites=true&w=majority", {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      bufferTimeoutMS: 30000,
     });
     console.log("✅ MongoDB connected");
 
@@ -61,18 +62,18 @@ connectDB();
 
 // 9️⃣ Routes
 app.use("/api/contact", contactRoutes);
-//Job Apply
 app.use("/api/apply", jobRoutes);
-//blogs
 app.use("/api/blogs", blogRoutes);
 
-// 1️⃣0️⃣ Admin Register
+// 🔟 Admin Register
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const existingAdmin = await Admin.findOne({ email });
-    if (existingAdmin) return res.status(403).json({ message: "Admin already registered" });
+    if (existingAdmin) {
+      return res.status(403).json({ message: "Admin already registered" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const admin = new Admin({ email, password: hashedPassword });
@@ -95,7 +96,12 @@ app.post("/api/auth/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: admin._id, email: admin.email }, JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { id: admin._id, email: admin.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
     res.json({ token, message: "Login success" });
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error: error.message });
