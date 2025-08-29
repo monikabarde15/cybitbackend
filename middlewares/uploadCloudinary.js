@@ -12,7 +12,7 @@ cloudinary.config({
 // Multer storage (temporary local uploads)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads");
+    cb(null, "./uploads"); // ensure uploads/ exists
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "_" + file.originalname);
@@ -24,13 +24,17 @@ const upload = multer({ storage });
 export const uploadToCloudinary = async (filePath) => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
-      resource_type: "auto", // image, video, pdf etc.
-      folder: "resumes",     // optional folder in Cloudinary
+      folder: "resumes",      // ✅ all resumes go here
+      resource_type: "raw",   // ✅ force raw => pdf/doc/docx viewable
+      use_filename: true,     // keep original filename
+      unique_filename: true,  // avoid overwrite
     });
     fs.unlinkSync(filePath); // delete local file after upload
-    return result.secure_url;
+    return result.secure_url; // public https URL
   } catch (err) {
-    fs.unlinkSync(filePath);
+    try {
+      fs.unlinkSync(filePath);
+    } catch {}
     throw err;
   }
 };
