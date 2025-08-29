@@ -24,10 +24,10 @@ const upload = multer({ storage });
 export const uploadToCloudinary = async (filePath) => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
-      folder: "resumes",      // ✅ all resumes go here
-      resource_type: "raw",   // ✅ force raw => pdf/doc/docx viewable
-      use_filename: true,     // keep original filename
-      unique_filename: true,  // avoid overwrite
+    folder: "resumes",
+    resource_type: "auto",   // ✅ auto detect pdf/docx
+    use_filename: true,
+    unique_filename: true,
     });
     fs.unlinkSync(filePath); // delete local file after upload
     return result.secure_url; // public https URL
