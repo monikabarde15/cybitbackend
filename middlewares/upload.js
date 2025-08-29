@@ -1,14 +1,19 @@
 import multer from "multer";
-import { GridFsStorage } from "multer-gridfs-storage";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const storage = new GridFsStorage({
-  url: process.env.MONGO_URI || "your_mongo_atlas_uri",
-  options: { useNewUrlParser: true, useUnifiedTopology: true },
-  file: (req, file) => {
-    return {
-      bucketName: "resumes", // collection name
-      filename: Date.now() + "-" + file.originalname, // unique filename
-    };
+// ESM setup for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Storage config (local uploads/)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "../uploads")); // save in uploads/
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname)); // e.g. 12345678.pdf
   },
 });
 
