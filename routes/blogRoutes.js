@@ -1,23 +1,29 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 import Blog from "../models/Blog.js";
 
 const router = express.Router();
 
-// ✅ Ensure uploads folder exists
-const uploadDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-  console.log("✅ uploads/ folder created");
-}
+/* ========================================================
+   📌 Cloudinary Config
+======================================================== */
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// ✅ Multer Storage Config
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + path.extname(file.originalname)),
+/* ========================================================
+   📌 Multer + Cloudinary Storage
+======================================================== */
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "blogs", // ✅ Cloudinary folder
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  },
 });
 
 const upload = multer({ storage });
@@ -36,7 +42,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       });
     }
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const imageUrl = req.file ? req.file.path : null; // ✅ Cloudinary URL
 
     const newBlog = new Blog({
       title,
@@ -113,17 +119,12 @@ router.put("/:id", upload.single("image"), async (req, res) => {
         .json({ success: false, message: "Blog not found" });
     }
 
-    // Delete old image only if new one is uploaded
-    if (req.file && blog.image) {
-      const oldImagePath = path.join(uploadDir, path.basename(blog.image));
-      if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+    if (req.file) {
+      blog.image = req.file.path; // ✅ Cloudinary URL
     }
-
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : blog.image;
 
     blog.title = title || blog.title;
     blog.description = description || blog.description;
-    blog.image = imageUrl;
 
     await blog.save();
 
@@ -155,10 +156,10 @@ router.delete("/:id", async (req, res) => {
         .json({ success: false, message: "Blog not found" });
     }
 
-    // Delete image if exists
+    // ✅ Delete from Cloudinary if image exists
     if (blog.image) {
-      const imagePath = path.join(uploadDir, path.basename(blog.image));
-      if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+      const publicId = blog.image.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(`blogs/${publicId}`);
     }
 
     await Blog.findByIdAndDelete(req.params.id);
