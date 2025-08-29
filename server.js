@@ -39,7 +39,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_here";
 app.use(cors());
 app.use(express.json());
 
-// ✅ Serve uploads folder statically (important for resumes/images)
+// ✅ Serve uploads folder statically
 app.use("/uploads", express.static(uploadDir));
 
 // 8️⃣ MongoDB Connection
@@ -55,7 +55,6 @@ async function connectDB() {
     );
     console.log("✅ MongoDB connected");
 
-    // Start server only after DB connection
     app.listen(PORT, () =>
       console.log(`🚀 Server running on http://localhost:${PORT}`)
     );
