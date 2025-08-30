@@ -87,4 +87,36 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+/* ========================================================
+   📌 Update Blog
+======================================================== */
+router.put("/:id", upload.single("image"), async (req, res) => {
+  try {
+    const { title, description } = req.body;
+
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) return res.status(404).json({ success: false, message: "Blog not found" });
+
+    // Update fields
+    blog.title = title || blog.title;
+    blog.description = description || blog.description;
+
+    // If new image uploaded, replace old image
+    if (req.file) {
+      // Delete old image from Cloudinary
+      if (blog.imageId) {
+        await cloudinary.uploader.destroy(blog.imageId);
+      }
+      blog.image = req.file.path;
+      blog.imageId = req.file.filename;
+    }
+
+    await blog.save();
+    res.json({ success: true, message: "Blog updated successfully", data: blog });
+  } catch (error) {
+    console.error("❌ Error updating blog:", error);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+});
+
 export default router;

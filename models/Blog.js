@@ -4,8 +4,8 @@ const blogSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
-    image: { type: String },
-    imageId: { type: String }, // store Cloudinary public_id
+    image: { type: String, default: null },
+    imageId: { type: String, default: null },
   },
   { timestamps: true }
 );
