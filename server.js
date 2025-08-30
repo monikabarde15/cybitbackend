@@ -47,7 +47,7 @@ async function connectDB() {
   try {
     await mongoose.connect(
       process.env.MONGO_URI ||
-        "mongodb+srv://demoadmin:sw8M6RwtzL3v_VN@cluster0.ocsokf8.mongodb.net/testdb?retryWrites=true&w=majority",
+        "mongodb+srv://demoproject:VLSTJRwMJ7EUcCuZ@cluster0.8sal0ze.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
