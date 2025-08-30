@@ -117,5 +117,20 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error", error: err.message });
   }
 });
+// ======================
+// Get Single Blog by ID
+// ======================
+router.get("/:id", async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found" });
+    }
+    res.json({ success: true, data: blog });
+  } catch (err) {
+    console.error("GET /blogs/:id ERROR:", err);
+    res.status(500).json({ success: false, message: "Server error", error: err.message });
+  }
+});
 
 export default router;
