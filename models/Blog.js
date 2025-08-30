@@ -4,10 +4,10 @@ const blogSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
-    image: { type: String, required: false }, // optional image
+    image: { type: String },
+    imageId: { type: String }, // store Cloudinary public_id
   },
   { timestamps: true }
 );
 
-const Blog = mongoose.model("Blog", blogSchema);
-export default Blog;
+export default mongoose.model("Blog", blogSchema);
