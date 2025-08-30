@@ -45,9 +45,10 @@ app.use("/uploads", express.static(uploadDir));
 // 8️⃣ MongoDB Connection
 async function connectDB() {
   try {
+    
     await mongoose.connect(
       process.env.MONGO_URI ||
-        "mongodb+srv://demoproject:VLSTJRwMJ7EUcCuZ@cluster0.8sal0ze.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+        "mongodb+srv://demoproject:VLSTJRwMJ7EUcCuZ@cluster0.8sal0ze.mongodb.net/VisionLex?retryWrites=true&w=majority&appName=Cluster0",
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
