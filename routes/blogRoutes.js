@@ -24,23 +24,26 @@ const upload = multer({ storage });
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { title, description } = req.body;
-    if (!title || !description)
-      return res.status(400).json({ success: false, message: "Title and Description required" });
+    if (!title || !description) {
+      return res.status(400).json({ success: false, message: "Title and description required" });
+    }
 
     const newBlog = new Blog({
       title,
       description,
-      image: req.file?.path || null,
+      image: req.file?.path || null, // <-- must use req.file.path
       imageId: req.file?.filename || null,
     });
+
     await newBlog.save();
 
-    res.status(201).json({ success: true, message: "Blog created", data: newBlog });
+    res.status(201).json({ success: true, data: newBlog });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Server Error", error: err.message });
+    console.error("❌ POST /blogs error:", err); // important for debugging
+    res.status(500).json({ success: false, message: "Server error", error: err.message });
   }
 });
+
 
 // Get all blogs
 router.get("/", async (req, res) => {
