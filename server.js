@@ -116,10 +116,12 @@ app.post("/api/auth/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.json({ token, message: "Login success" });
+    // 👇 yahan email bhi bhejo
+    res.json({ token, email: admin.email, message: "Login success" });
   } catch (error) {
     res
       .status(500)
       .json({ message: "Error logging in", error: error.message });
   }
 });
+
