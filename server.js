@@ -72,7 +72,7 @@ connectDB();
 app.use("/api/contact", contactRoutes);
 app.use("/api/apply", jobRoutes);
 app.use("/api/blogs", blogRoutes);
-app.use("/admin/change-password", adminRoutes);
+app.use("/api/admin", adminRoutes);
 
 
 // 🔟 Admin Register
