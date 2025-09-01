@@ -20,6 +20,8 @@ import Admin from "./models/Admin.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+
 
 // 4️⃣ Ensure uploads folder exists
 const uploadDir = path.join(__dirname, "uploads");
@@ -70,6 +72,8 @@ connectDB();
 app.use("/api/contact", contactRoutes);
 app.use("/api/apply", jobRoutes);
 app.use("/api/blogs", blogRoutes);
+app.use("/admin/change-password", adminRoutes);
+
 
 // 🔟 Admin Register
 app.post("/api/auth/register", async (req, res) => {
