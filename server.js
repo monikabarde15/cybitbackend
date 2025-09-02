@@ -2,6 +2,11 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+console.log("ENV CHECK:", {
+  CLOUD_NAME: process.env.CLOUD_NAME,
+  CLOUD_API_KEY: process.env.CLOUD_API_KEY,
+  CLOUD_API_SECRET: process.env.CLOUD_API_SECRET
+});
 // 2️⃣ ESM __dirname setup
 import path from "path";
 import { fileURLToPath } from "url";
@@ -21,8 +26,14 @@ import contactRoutes from "./routes/contactRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import adminRoutesnew from "./routes/adminRoutes.js";
+import { v2 as cloudinary } from "cloudinary";  // 👈 ये add करो
 
 
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+});
 // 4️⃣ Ensure uploads folder exists
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {

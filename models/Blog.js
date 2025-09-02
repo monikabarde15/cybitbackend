@@ -2,12 +2,25 @@ import mongoose from "mongoose";
 
 const blogSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-    image: { type: String, default: null },
-    imageId: { type: String, default: null },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    image: {
+      type: String, // Cloudinary image URL
+    },
+    imageId: {
+      type: String, // Cloudinary public_id
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Blog", blogSchema);
+const Blog = mongoose.model("Blog", blogSchema);
+
+export default Blog;

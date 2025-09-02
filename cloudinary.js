@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config(); // 🔑 env load karo sabse pehle
+
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
@@ -12,7 +15,11 @@ cloudinary.config({
 // Multer config for temporary uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads"); // existing uploads folder
+    // ensure uploads folder exists
+    if (!fs.existsSync("./uploads")) {
+      fs.mkdirSync("./uploads");
+    }
+    cb(null, "./uploads");
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "_" + file.originalname);
