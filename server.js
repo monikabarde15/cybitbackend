@@ -26,6 +26,11 @@ import contactRoutes from "./routes/contactRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import adminRoutesnew from "./routes/adminRoutes.js";
+import invoiceRoutes from "./routes/invoiceRoutes.js";
+import expenseRoutes from "./routes/expenseRoutes.js";
+import estimationRoutes from "./routes/estimationRoutes.js";
+import employees from './routes/employees.js';
+
 import { v2 as cloudinary } from "cloudinary";  // 👈 ये add करो
 
 
@@ -84,6 +89,10 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/apply", jobRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/admin", adminRoutesnew);
+app.use("/api/invoices", invoiceRoutes);
+app.use("/api/expenses", expenseRoutes);
+app.use("/api/estimation", estimationRoutes);
+app.use("/api/employees", employees);
 
 
 // 🔟 Admin Register
