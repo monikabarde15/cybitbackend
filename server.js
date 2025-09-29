@@ -2,6 +2,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+
 console.log("ENV CHECK:", {
   CLOUD_NAME: process.env.CLOUD_NAME,
   CLOUD_API_KEY: process.env.CLOUD_API_KEY,
@@ -30,6 +31,10 @@ import invoiceRoutes from "./routes/invoiceRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import estimationRoutes from "./routes/estimationRoutes.js";
 import employees from './routes/employees.js';
+import employeeRouter from './routes/auth.js';
+import taskRoutes from './routes/taskRoutes.js';
+import projectRoutes from './routes/projectRoutes.js';
+
 
 import { v2 as cloudinary } from "cloudinary";  // 👈 ये add करो
 
@@ -51,7 +56,7 @@ const app = express();
 
 // 6️⃣ Constants
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_here";
+const JWT_SECRET = process.env.JWT_SECRET || "1e277147c869def60f7308fa1c003f9d31e83c0ae7e46449bc3a98174793390cfd47efd110b65ff1565e7c7180d6c6f2f8748e143b82ddfc8e9fea0e22cbc329";
 
 // 7️⃣ Middleware
 app.use(cors());
@@ -66,7 +71,7 @@ async function connectDB() {
     
     await mongoose.connect(
       process.env.MONGO_URI ||
-        "mongodb+srv://demoproject:VLSTJRwMJ7EUcCuZ@cluster0.8sal0ze.mongodb.net/VisionLex?retryWrites=true&w=majority&appName=Cluster0",
+        "mongodb+srv://shruticybite_db_user:kn5CuWhdreTByugO@cluster0.sk9y8yj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
@@ -93,6 +98,17 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/estimation", estimationRoutes);
 app.use("/api/employees", employees);
+app.use('/api/authEmployee', employeeRouter);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/projects', projectRoutes);
+
+
+
+app.use((req, res, next) => {
+  console.log(`Incoming ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  next();
+});
 
 
 // 🔟 Admin Register

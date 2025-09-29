@@ -63,8 +63,23 @@ const EmployeesSchema = new mongoose.Schema(
     aadharFile: String,
     panFile: String,
     companyLogo: String,
+    password:String,
+
+      previousCompany:String,
+      previousPosition:String,
+      previousSalary:{type:Number,default:0},
+      previousDOR:Date,
+    role: {
+      type: String,
+      enum: ['employee', 'admin'],
+      default: 'employee'
+    },
+    permissions: {
+      type: [String], // array of allowed actions or module names
+      default: []
+    },
   },
   { timestamps: true } // automatically adds createdAt and updatedAt
 );
 
-export default mongoose.model("Employee", EmployeesSchema);
+export default mongoose.model("Employees", EmployeesSchema);

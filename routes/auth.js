@@ -1,63 +1,31 @@
-import express from "express";
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import Employee from '../models/Employees.js';
 
 const router = express.Router();
+const JWT_SECRET = '1e277147c869def60f7308fa1c003f9d31e83c0ae7e46449bc3a98174793390cfd47efd110b65ff1565e7c7180d6c6f2f8748e143b82ddfc8e9fea0e22cbc329';//process.env.JWT_SECRET;
 
-// ✅ MongoDB connection (replace <DB_URI> with your URI)
-mongoose.connect("mongodb+srv://demoadmin:sw8M6RwtzL3v_VN@cluster0.ocsokf8.mongodb.net/testdb?retryWrites=true&w=majority&appName=Cluster0", { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.error("MongoDB connection error:", err));
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
 
-// ✅ Admin Schema
-const adminSchema = new mongoose.Schema({
-  email: { type: String, unique: true, required: true },
-  password: { type: String, required: true },
-});
-
-const Admin = mongoose.model("Admin", adminSchema);
-
-// Register (first-time setup)
-router.post("/register", async (req, res) => {
   try {
-    const existingAdmin = await Admin.findOne({});
-    if (existingAdmin) {
-      return res.status(403).json({ message: "Admin already registered. Use login." });
-    }
+    const employee = await Employee.findOne({ email });
+    if (!employee) return res.status(400).json({ message: 'Employee not found' });
 
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: "Email and password required" });
+    const isValid = await bcrypt.compare(password, employee.password);
+    if (!isValid) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const admin = new Admin({ email, password: hashedPassword });
-    await admin.save();
-
-    res.json({ message: "Admin registered successfully", email });
+    const token = jwt.sign({ id: employee._id, email: employee.email }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token, message: 'Login successful', user: employee });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Login route error:", err);  // Log full error
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-// Login
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
 
-    const admin = await Admin.findOne({});
-    if (!admin) return res.status(400).json({ message: "Admin not registered yet" });
+router.get('/test', (req, res) => res.send('Auth router test route active'));
 
-    if (email !== admin.email) return res.status(401).json({ message: "Invalid credentials" });
-
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
-
-    res.json({ token: "dummy_admin_token", message: "Login success" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
 
 export default router;
